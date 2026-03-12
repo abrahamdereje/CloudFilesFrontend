@@ -1,135 +1,95 @@
 <template>
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
+    <div class="space-y-6">
+        <div class="bg-white shadow-md rounded-2xl p-8 text-gray-800">
+           <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-semibold text-gray-800">My Files</h3>
-                <p class="text-sm text-gray-500">Upload and manage your files</p>
+                <h3 class="font-bold text-gray-700">My Files</h3>
+                <p class="text-sm text-gray-500 py-2">Upload and manage your files</p>
             </div>
             <button @click="showUploadModal = true"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md flex items-center space-x-2">
-                <span>Upload File</span>
+                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm">
+                Upload File
             </button>
         </div>
-
-        <!-- Loading State -->
-        <div v-if="loading" class="text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent">
+        <div v-if="loading" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-transparent">
             </div>
-            <p class="mt-2 text-gray-600">Loading files...</p>
+            <p class="mt-2 text-gray-500 text-sm">Loading files...</p>
         </div>
 
-        <!-- Files Grid -->
         <div v-else-if="files.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div v-for="file in files" :key="file.path"
-                class="border rounded-lg p-4 hover:shadow-md transition-shadow group relative">
-                <div class="flex items-start justify-between">
-                    <div class="flex items-center space-x-3">
-                        <!-- File Icon based on type -->
-                        <span class="text-xl">{{ getFileIcon(file.name) }}</span>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-medium text-gray-800 truncate" :title="file.name">
-                                {{ file.name }}
-                            </p>
-                            <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
-                        </div>
-                    </div>
-                    <button @click="confirmDelete(file)"
-                        class="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700">
-                        Delete
-                    </button>
-                </div>
-                <p class="text-xs text-gray-400 mt-2">Uploaded {{ formatDate(file.last_modified) }}</p>
-
-                <!-- Download/View Link -->
-                <a :href="file.url" target="_blank"
-                    class="mt-3 inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
-                    View File
-                </a>
+                class="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-sm transition-shadow text-sm">
+                <p class="truncate text-gray-800 font-medium" :title="file.name">{{ file.name }}</p>
+                <p class="text-gray-500 mt-1">{{ formatFileSize(file.size) }}</p>
+                <p class="text-gray-400 text-xs mt-1">Uploaded {{ formatDate(file.last_modified) }}</p>
+                <a :href="file.url" target="_blank" class="block mt-2 text-gray-600 hover:underline text-xs">View
+                    File</a>
             </div>
         </div>
 
-        <!-- Empty State -->
         <div v-else class="text-center py-12">
-            <h4 class="text-lg font-medium text-gray-700 mb-2">No files yet</h4>
-            <p class="text-gray-500 mb-4">Upload your first file to get started</p>
+            <h4 class="text-md font-medium text-gray-600 mb-2">No files yet</h4>
+            <p class="text-gray-500 mb-4 text-sm">Upload your first file to get started</p>
             <button @click="showUploadModal = true"
-                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                class="px-4 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm">
                 Upload Now
             </button>
         </div>
 
         <!-- Upload Modal -->
-        <div v-if="showUploadModal"
-            class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div class="bg-white rounded-xl max-w-md w-full p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold">Upload File</h3>
-                    <button @click="closeModal" class="text-gray-500 hover:text-gray-700">Close</button>
+        <div v-if="showUploadModal" class="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl max-w-sm w-full p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-md font-medium text-gray-700">Upload File</h3>
+                    <button @click="closeModal" class="text-gray-500 hover:text-red-700 text-xl cursor-pointer">X</button>
                 </div>
 
-                <!-- Upload Area -->
                 <div @dragenter.prevent="dragging = true" @dragleave.prevent="dragging = false" @dragover.prevent
                     @drop.prevent="handleDrop"
-                    class="border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer"
-                    :class="dragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'"
+                    class="border-2 border-dashed rounded-md p-4 text-center cursor-pointer transition-colors text-sm"
+                    :class="dragging ? 'border-gray-400 bg-gray-50' : 'border-gray-300 hover:border-gray-400'"
                     @click="triggerFileInput">
                     <input ref="fileInput" type="file" @change="handleFileSelect" class="hidden" multiple />
-
                     <div v-if="!selectedFiles.length">
-                        <p class="text-gray-700 mb-2">Drag and drop your files here</p>
-                        <p class="text-gray-500 text-sm">or click to browse</p>
+                        <p class="text-gray-600">Drag and drop your files here</p>
+                        <p class="text-gray-400 text-xs mt-1">or click to browse</p>
                     </div>
 
-                    <!-- Selected Files Preview -->
-                    <div v-else class="space-y-3">
+                    <div v-else class="space-y-2 mt-2">
                         <div v-for="file in selectedFiles" :key="file.name"
-                            class="flex items-center justify-between bg-gray-50 p-2 rounded">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xl">{{ getFileIcon(file.name) }}</span>
-                                <div class="text-left">
-                                    <p class="font-medium text-gray-800">{{ file.name }}</p>
-                                    <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
-                                </div>
-                            </div>
-                            <button @click.stop="removeFile(file)"
-                                class="text-red-500 hover:text-red-700">Remove</button>
+                            class="flex justify-between bg-gray-50 p-2 rounded text-sm text-gray-700">
+                            <p class="truncate">{{ file.name }}</p>
+                            <p class="text-gray-400">{{ formatFileSize(file.size) }}</p>
                         </div>
                     </div>
                 </div>
-
-                <!-- Upload Progress -->
-                <div v-if="uploading" class="mt-4">
-                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                <div v-if="uploading">
+                    <div class="flex justify-between text-xs text-gray-500 mb-1">
                         <span>Uploading...</span>
                         <span>{{ uploadProgress }}%</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-600 rounded-full h-2 transition-all duration-300"
+                    <div class="w-full bg-gray-200 rounded-full h-1">
+                        <div class="bg-gray-400 rounded-full h-1 transition-all"
                             :style="{ width: uploadProgress + '%' }"></div>
                     </div>
                 </div>
-
-                <!-- Upload Error -->
-                <div v-if="uploadError" class="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+                <div v-if="uploadError" class="p-2 bg-red-50 text-red-700 rounded text-xs">
                     {{ uploadError }}
                 </div>
 
-                <!-- Modal Actions -->
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button @click="closeModal" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                        Cancel
-                    </button>
+                <div class="flex justify-end space-x-2 mt-3">
+                    <button @click="closeModal"
+                        class="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-200 rounded-md hover:bg-red-300 transition-colors">Cancel</button>
                     <button @click="uploadFiles" :disabled="!selectedFiles.length || uploading"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                         <span v-if="!uploading">Upload {{ selectedFiles.length }} file(s)</span>
-                        <span v-else class="flex items-center">
-                            Uploading...
-                        </span>
+                        <span v-else>Uploading...</span>
                     </button>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </template>
 
@@ -137,9 +97,8 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 
-const { uploadFile, listFiles, deleteFile } = useApi()
+const { uploadFile, listFiles } = useApi()
 
-// State
 const files = ref<any[]>([])
 const loading = ref(false)
 const showUploadModal = ref(false)
@@ -150,12 +109,7 @@ const uploadProgress = ref(0)
 const uploadError = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 
-// Load files on mount
-onMounted(async () => {
-    await loadFiles()
-})
 
-// Load files from backend
 const loadFiles = async () => {
     loading.value = true
     try {
@@ -170,25 +124,7 @@ const loadFiles = async () => {
     }
 }
 
-// File icon based on extension
-const getFileIcon = (filename: string): string => {
-    const ext = filename.split('.').pop()?.toLowerCase()
-    switch (ext) {
-        case 'pdf': return '📄'
-        case 'jpg':
-        case 'jpeg':
-        case 'png':
-        case 'gif': return '🖼️'
-        case 'doc':
-        case 'docx': return '📝'
-        case 'xls':
-        case 'xlsx': return '📊'
-        case 'txt': return '📃'
-        default: return '📁'
-    }
-}
 
-// Format file size
 const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -197,7 +133,7 @@ const formatFileSize = (bytes: number): string => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-// Format date
+
 const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
     const now = new Date()
@@ -210,7 +146,6 @@ const formatDate = (dateString: string): string => {
     return date.toLocaleDateString()
 }
 
-// File selection handlers
 const triggerFileInput = () => {
     fileInput.value?.click()
 }
@@ -233,11 +168,8 @@ const addFiles = (newFiles: File[]) => {
     selectedFiles.value = [...selectedFiles.value, ...newFiles]
 }
 
-const removeFile = (file: File) => {
-    selectedFiles.value = selectedFiles.value.filter(f => f !== file)
-}
 
-// Upload files
+
 const uploadFiles = async () => {
     if (!selectedFiles.value.length) return
 
@@ -256,8 +188,6 @@ const uploadFiles = async () => {
 
             uploadProgress.value = Math.round(((i + 1) / selectedFiles.value.length) * 100)
         }
-
-        // Success - close modal and refresh files
         closeModal()
         await loadFiles()
 
@@ -269,7 +199,7 @@ const uploadFiles = async () => {
     }
 }
 
-// Close modal and reset
+
 const closeModal = () => {
     showUploadModal.value = false
     selectedFiles.value = []
@@ -279,19 +209,7 @@ const closeModal = () => {
     }
 }
 
-// Delete file with confirmation
-const confirmDelete = async (file: any) => {
-    if (!confirm(`Are you sure you want to delete "${file.name}"?`)) {
-        return
-    }
-
-    try {
-        const response = await deleteFile(file.path)
-        if (response.success) {
-            await loadFiles()
-        }
-    } catch (error) {
-        console.error('Delete failed:', error)
-    }
-}
+onMounted(async () => {
+    await loadFiles()
+})
 </script>

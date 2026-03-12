@@ -1,28 +1,22 @@
-// composables/useApi.ts
 import { useAuth } from './useAuth'
 
 export const useApi = () => {
     const { user } = useAuth()
-    const config = useRuntimeConfig()
 
-    const API_BASE = 'http://localhost:8000/api' // Your Laravel backend URL
-
-    // Helper to get auth token (for Day 3 when you add Firebase)
+    const API_BASE = 'http://localhost:8000/api' 
     const getHeaders = () => {
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
 
-        // Add Firebase token if user is logged in (for Day 3)
         if (user.value) {
-            // user.value.getIdToken() // You'll add this later
         }
 
         return headers
     }
 
-    // File upload (multipart/form-data - don't set Content-Type)
+    // File upload (multipart/form-data 
     const uploadFile = async (file: File, isPublic = false) => {
         const formData = new FormData()
         formData.append('file', file)
@@ -32,7 +26,6 @@ export const useApi = () => {
             const response = await fetch(`${API_BASE}/files/upload`, {
                 method: 'POST',
                 body: formData,
-                // Don't set Content-Type header - browser will set it with boundary
             })
 
             return await response.json()
