@@ -15,8 +15,6 @@ export const useApi = () => {
 
         return headers
     }
-
-    // File upload (multipart/form-data 
     const uploadFile = async (file: File, isPublic = false) => {
         const formData = new FormData()
         formData.append('file', file)
@@ -34,21 +32,28 @@ export const useApi = () => {
             throw error
         }
     }
-
-    // List all files
     const listFiles = async () => {
         try {
             const response = await fetch(`${API_BASE}/files`, {
                 headers: getHeaders()
             })
-            return await response.json()
+            const data = await response.json()
+
+            if (data.success && data.files) {
+                return {
+                    success: true,
+                    files: data.files.map(file => ({
+                        ...file,
+                        uploaded_at: file.uploaded_at || file.last_modified
+                    }))
+                }
+            }
+            return data
         } catch (error) {
             console.error('List files error:', error)
             throw error
         }
     }
-
-    // Get file stats
     const getStats = async () => {
         try {
             const response = await fetch(`${API_BASE}/files/stats`, {
@@ -61,7 +66,6 @@ export const useApi = () => {
         }
     }
 
-    // Delete file
     const deleteFile = async (path: string) => {
         try {
             const response = await fetch(`${API_BASE}/files/${encodeURIComponent(path)}`, {
